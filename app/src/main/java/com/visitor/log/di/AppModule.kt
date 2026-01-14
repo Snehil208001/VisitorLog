@@ -9,7 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor // Import this
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -31,17 +31,14 @@ object AppModule {
     @Provides
     @Singleton
     fun provideApiService(): GuestApiService {
-        // 1. Create the Logging Interceptor
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY // Logs headers + body
         }
 
-        // 2. Add it to OkHttpClient
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
             .build()
 
-        // 3. Attach Client to Retrofit
         return Retrofit.Builder()
             .baseUrl("https://plannix.in/")
             .client(client) // <--- Important!

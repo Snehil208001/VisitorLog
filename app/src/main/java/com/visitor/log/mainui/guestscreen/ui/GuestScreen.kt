@@ -41,7 +41,6 @@ fun GuestScreen(
     val totalCount by viewModel.totalCount.collectAsState()
     val context = LocalContext.current
 
-    // Error Handling Toast
     LaunchedEffect(guests.loadState) {
         if (guests.loadState.refresh is LoadState.Error) {
             Toast.makeText(context, "Error loading data", Toast.LENGTH_SHORT).show()
@@ -104,7 +103,6 @@ fun GuestScreen(
         }
     ) { innerPadding ->
 
-        // Pull to Refresh State
         val isRefreshing = guests.loadState.refresh is LoadState.Loading
         val pullToRefreshState = rememberPullToRefreshState()
 
@@ -116,7 +114,6 @@ fun GuestScreen(
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 if (guests.loadState.refresh is LoadState.Error && guests.itemCount == 0) {
-                    // Full Screen Error with Retry
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -128,7 +125,6 @@ fun GuestScreen(
                         }
                     }
                 } else if (guests.itemCount == 0 && !isRefreshing) {
-                    // Empty State
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -137,7 +133,6 @@ fun GuestScreen(
                         Text("No guest data available", color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
                     }
                 } else {
-                    // List Data
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -156,7 +151,6 @@ fun GuestScreen(
                             }
                         }
 
-                        // Footer Loading or Retry
                         if (guests.loadState.append is LoadState.Loading) {
                             item {
                                 Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
@@ -195,7 +189,6 @@ fun GuestCard(guest: GuestEntity) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -217,7 +210,6 @@ fun GuestCard(guest: GuestEntity) {
                     )
                 }
 
-                // VIP/Category Chip
                 Surface(
                     color = if (isVip) Color(0xFFFFF8E1) else Color(0xFFF5F5F5),
                     shape = RoundedCornerShape(100),
@@ -238,7 +230,6 @@ fun GuestCard(guest: GuestEntity) {
                 }
             }
 
-            // Body
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                 // Phone
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -257,7 +248,6 @@ fun GuestCard(guest: GuestEntity) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Booking ID and Status
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -270,7 +260,6 @@ fun GuestCard(guest: GuestEntity) {
                         Text(guest.bookingId, fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = Color.Black)
                     }
 
-                    // KYC Status
                     Surface(
                         color = if (isVerified) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
                         shape = RoundedCornerShape(4.dp)
@@ -297,7 +286,6 @@ fun GuestCard(guest: GuestEntity) {
                 }
             }
 
-            // Footer
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

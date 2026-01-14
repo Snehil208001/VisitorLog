@@ -27,7 +27,6 @@ class GuestscreenViewModel @Inject constructor(
 
     val searchQuery = MutableStateFlow("")
 
-    // State for Total Records count
     private val _totalCount = MutableStateFlow(0)
     val totalCount: StateFlow<Int> = _totalCount.asStateFlow()
 

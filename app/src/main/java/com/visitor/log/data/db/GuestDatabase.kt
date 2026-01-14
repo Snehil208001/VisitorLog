@@ -15,7 +15,6 @@ interface GuestDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(guests: List<GuestEntity>)
 
-    // Search query support
     @Query("SELECT * FROM guests WHERE name LIKE '%' || :query || '%' OR mobile LIKE '%' || :query || '%' ORDER BY page ASC")
     fun getGuests(query: String): PagingSource<Int, GuestEntity>
 
