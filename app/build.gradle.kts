@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.ksp) // Add KSP for Room
+    alias(libs.plugins.google.hilt) // Add Hilt
 }
 
 android {
@@ -56,4 +58,31 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.paging)
+    ksp(libs.androidx.room.compiler)
+
+    // Paging
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
+
+    // Network
+    implementation(libs.squareup.retrofit)
+    implementation(libs.squareup.converter.gson)
+    implementation(libs.squareup.okhttp)
+    implementation(libs.squareup.logging.interceptor)
+
+    // Hilt DI
+    implementation(libs.google.hilt.android)
+    ksp(libs.google.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // Coil (Optional for images)
+    implementation(libs.io.coil.compose)
+    // Add Extended Icons
+    implementation(libs.androidx.material.icons.extended)
+
 }
