@@ -17,7 +17,8 @@ import java.io.IOException
 class GuestRemoteMediator(
     private val query: String,
     private val apiService: GuestApiService,
-    private val database: GuestDatabase
+    private val database: GuestDatabase,
+    private val onTotalCountUpdated: (Int) -> Unit // Callback for Total Count
 ) : RemoteMediator<Int, GuestEntity>() {
 
     override suspend fun load(
@@ -48,9 +49,13 @@ class GuestRemoteMediator(
             val response = apiService.getGuests(page, state.config.pageSize)
             val guests = response.data ?: emptyList()
 
+            // Update Total Count if available
+            response.pagination?.totalRecords?.let { count ->
+                onTotalCountUpdated(count)
+            }
+
             // Filter out invalid guests (null IDs)
             val validGuests = guests.filter { !it.guestId.isNullOrEmpty() }
-
             val endOfPaginationReached = guests.isEmpty()
 
             database.withTransaction {
@@ -64,7 +69,6 @@ class GuestRemoteMediator(
                 val nextKey = if (endOfPaginationReached) null else page + 1
 
                 val keys = validGuests.map {
-                    // Force non-null assertion is safe here because we filtered above
                     RemoteKeys(guestId = it.guestId!!, prevKey = prevKey, nextKey = nextKey)
                 }
                 val entities = validGuests.map { it.toEntity(page) }

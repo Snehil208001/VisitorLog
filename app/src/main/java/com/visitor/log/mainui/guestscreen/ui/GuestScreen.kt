@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +38,7 @@ fun GuestScreen(
 ) {
     val guests = viewModel.guestPagingFlow.collectAsLazyPagingItems()
     val searchQuery by viewModel.searchQuery.collectAsState()
+    val totalCount by viewModel.totalCount.collectAsState()
     val context = LocalContext.current
 
     // Error Handling Toast
@@ -53,7 +56,19 @@ fun GuestScreen(
                     .padding(bottom = 8.dp)
             ) {
                 CenterAlignedTopAppBar(
-                    title = { Text("Visitor List", fontWeight = FontWeight.Bold) },
+                    title = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Visitor List", fontWeight = FontWeight.Bold)
+                            // Display Total Count
+                            if (totalCount > 0) {
+                                Text(
+                                    text = "Total Visitors: $totalCount",
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    },
                     actions = {
                         IconButton(onClick = {}) { Icon(Icons.Filled.FilterList, contentDescription = null) }
                         IconButton(onClick = {}) { Icon(Icons.Filled.Notifications, contentDescription = null) }
@@ -89,41 +104,76 @@ fun GuestScreen(
         }
     ) { innerPadding ->
 
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            if (guests.loadState.refresh is LoadState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (guests.itemCount == 0 && guests.loadState.refresh !is LoadState.Loading) {
-                // Empty State
-                Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(Icons.Outlined.Block, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(64.dp))
-                    Text("No guest data available", color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFFF6F6F8)), // Light bg from HTML
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(
-                        count = guests.itemCount,
-                        key = guests.itemKey { it.id },
-                        contentType = guests.itemContentType { "guest" }
-                    ) { index ->
-                        val guest = guests[index]
-                        if (guest != null) {
-                            GuestCard(guest)
+        // Pull to Refresh State
+        val isRefreshing = guests.loadState.refresh is LoadState.Loading
+        val pullToRefreshState = rememberPullToRefreshState()
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { guests.refresh() },
+            state = pullToRefreshState,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (guests.loadState.refresh is LoadState.Error && guests.itemCount == 0) {
+                    // Full Screen Error with Retry
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Outlined.Error, contentDescription = null, tint = Color.Red, modifier = Modifier.size(48.dp))
+                        Text("Failed to load data", color = Color.Red, modifier = Modifier.padding(8.dp))
+                        Button(onClick = { guests.retry() }) {
+                            Text("Retry")
                         }
                     }
+                } else if (guests.itemCount == 0 && !isRefreshing) {
+                    // Empty State
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Outlined.Block, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(64.dp))
+                        Text("No guest data available", color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
+                    }
+                } else {
+                    // List Data
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFFF6F6F8)), // Light bg
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(
+                            count = guests.itemCount,
+                            key = guests.itemKey { it.id },
+                            contentType = guests.itemContentType { "guest" }
+                        ) { index ->
+                            val guest = guests[index]
+                            if (guest != null) {
+                                GuestCard(guest)
+                            }
+                        }
 
-                    if (guests.loadState.append is LoadState.Loading) {
-                        item {
-                            Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        // Footer Loading or Retry
+                        if (guests.loadState.append is LoadState.Loading) {
+                            item {
+                                Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                }
+                            }
+                        } else if (guests.loadState.append is LoadState.Error) {
+                            item {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("Error loading more", color = Color.Red, fontSize = 12.sp)
+                                    Button(onClick = { guests.retry() }) {
+                                        Text("Retry")
+                                    }
+                                }
                             }
                         }
                     }

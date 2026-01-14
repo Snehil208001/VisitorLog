@@ -14,6 +14,8 @@ import com.visitor.log.data.repository.GuestRemoteMediator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import javax.inject.Inject
 
@@ -25,11 +27,22 @@ class GuestscreenViewModel @Inject constructor(
 
     val searchQuery = MutableStateFlow("")
 
+    // State for Total Records count
+    private val _totalCount = MutableStateFlow(0)
+    val totalCount: StateFlow<Int> = _totalCount.asStateFlow()
+
     @OptIn(ExperimentalPagingApi::class)
     val guestPagingFlow: Flow<PagingData<GuestEntity>> = searchQuery.flatMapLatest { query ->
         Pager(
             config = PagingConfig(pageSize = 5, prefetchDistance = 1),
-            remoteMediator = GuestRemoteMediator(query, apiService, database),
+            remoteMediator = GuestRemoteMediator(
+                query = query,
+                apiService = apiService,
+                database = database,
+                onTotalCountUpdated = { count ->
+                    _totalCount.value = count
+                }
+            ),
             pagingSourceFactory = { database.guestDao().getGuests(query) }
         ).flow
     }.cachedIn(viewModelScope)
