@@ -84,5 +84,9 @@ dependencies {
     implementation(libs.io.coil.compose)
     // Add Extended Icons
     implementation(libs.androidx.material.icons.extended)
+}
 
+// Fix for Hilt/JavaPoet compatibility issue with Kotlin 2.0
+hilt {
+    enableAggregatingTask = false
 }

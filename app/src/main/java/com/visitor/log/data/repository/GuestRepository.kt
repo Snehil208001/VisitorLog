@@ -47,6 +47,10 @@ class GuestRemoteMediator(
             // API Call
             val response = apiService.getGuests(page, state.config.pageSize)
             val guests = response.data ?: emptyList()
+
+            // Filter out invalid guests (null IDs)
+            val validGuests = guests.filter { !it.guestId.isNullOrEmpty() }
+
             val endOfPaginationReached = guests.isEmpty()
 
             database.withTransaction {
@@ -59,10 +63,11 @@ class GuestRemoteMediator(
                 val prevKey = if (page == 1) null else page - 1
                 val nextKey = if (endOfPaginationReached) null else page + 1
 
-                val keys = guests.map {
-                    RemoteKeys(guestId = it.guestId, prevKey = prevKey, nextKey = nextKey)
+                val keys = validGuests.map {
+                    // Force non-null assertion is safe here because we filtered above
+                    RemoteKeys(guestId = it.guestId!!, prevKey = prevKey, nextKey = nextKey)
                 }
-                val entities = guests.map { it.toEntity(page) }
+                val entities = validGuests.map { it.toEntity(page) }
 
                 database.remoteKeysDao().insertAll(keys)
                 database.guestDao().insertAll(entities)
