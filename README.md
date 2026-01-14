@@ -19,7 +19,7 @@
 | <img src="app/src/main/res/drawable/vistorlist.png" width="300" alt="Visitor List Screen"/> |
 | *Displays paginated guest list with offline support* |
 
-> **[Download Demo APK](https://drive.google.com/drive/folders/1fkxB4F7FpmOvrE5Ne2BflhB15w74MNqW?usp=sharing)** *(Replace this with your actual APK link)*
+> **[Download Demo APK](https://drive.google.com/drive/folders/1fkxB4F7FpmOvrE5Ne2BflhB15w74MNqW?usp=sharing)** 
 
 ## 🛠 Tech Stack & Architecture
 
